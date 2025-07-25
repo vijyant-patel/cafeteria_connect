@@ -3,6 +3,7 @@ from core.kafka.producer import publish_order_placed
 from django.shortcuts import render, get_object_or_404, redirect
 from shops.models import Shop, Product
 from cart.models import Cart
+from core.models import Address
 from .models import Order, OrderItem
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
@@ -41,29 +42,41 @@ def place_order(request, cart_id):
                 data = json.loads(request.body)
                 selected_ids = data.get('product_ids', [])
                 quantities = data.get('quantities', {})
+                address_id = data.get('address_id')
             except Exception:
                 return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
         else:
             selected_ids = request.POST.getlist('product_ids')
             quantities = {pid: request.POST.get(f'quantity_{pid}', 1) for pid in selected_ids}
+            address_id = request.POST.get('address_id')
 
-        if not selected_ids:
-            return JsonResponse({'status': 'error', 'message': 'No products selected'}, status=400)
+        if not selected_ids or not address_id:
+            return JsonResponse({'status': 'error', 'message': 'Missing product(s) or address'}, status=400)
+
+        selected_address = get_object_or_404(Address, id=address_id, user=request.user)
 
         total = 0
-        shop = products[0].product.shop if products else None  # Get shop from first product
-        order = Order.objects.create(customer=request.user, shop=shop, status='pending')
+        shop = products[0].product.shop if products else None
+        order = Order.objects.create(
+            customer=request.user,
+            shop=shop,
+            status='pending',
+            address=selected_address  # 👈 attach the address
+        )
 
         for item in products:
             pid = str(item.product.id)
             if pid in selected_ids:
-                quantity = int(quantities.get(pid, item.quantity))  # fallback to cart quantity
+                quantity = int(quantities.get(pid, item.quantity))
                 subtotal = item.product.price * quantity
                 total += subtotal
                 OrderItem.objects.create(order=order, product=item.product, quantity=quantity)
 
         order.total_price = total
         order.save()
+
+        cart.items.all().delete()
+        cart.delete()
 
         order_data = {
             'order_id': order.id,
@@ -82,20 +95,15 @@ def place_order(request, cart_id):
             ]
         }
 
-        # ✅ Mark cart as ordered & delete it
-        cart.items.all().delete()
-        cart.delete()
-
         publish_order_placed(order_data)
         generate_invoice.delay(order.id)
 
-        if is_json:
-            return JsonResponse({'status': 'success', 'message': 'Order placed!', 'order_id': order.id})
-        else:
-            return redirect('order_success', order_id=order.id)
+        return JsonResponse({'status': 'success', 'message': 'Order placed!', 'order_id': order.id})
 
-    return render(request, 'orders/shop_products.html', {'cart': cart, 'products': [item.product for item in products]})
-
+    return render(request, 'orders/shop_products.html', {
+        'cart': cart,
+        'products': [item.product for item in products]
+    })
 @login_required
 def order_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, customer=request.user)

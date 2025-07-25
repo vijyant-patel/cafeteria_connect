@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from shops.models import Product
 from .models import CartItem, Cart
+from core.models import Address
 from django.shortcuts import render, get_object_or_404
 from cart.context_processors import cart_item_count
 from django.contrib.auth.decorators import login_required
@@ -13,7 +14,9 @@ from django.contrib.auth.decorators import login_required
 def view_cart(request, cart_id):
     cart = get_object_or_404(Cart, id=cart_id, user=request.user, is_ordered=False)
     cart_items = cart.items.all()
-    return render(request, 'cart/cart.html', {"cart_items": cart_items, "cart": cart})
+    addresses = Address.objects.filter(user=request.user)
+
+    return render(request, 'cart/cart.html', {"cart_items": cart_items, "cart": cart, 'addresses': addresses})
 
 
 @login_required

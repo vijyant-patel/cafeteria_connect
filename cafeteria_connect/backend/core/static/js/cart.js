@@ -91,6 +91,7 @@ function clearCart(callback) {
 function placeOrder(cartId) {
     const selectedIds = [...document.querySelectorAll('.product-id')].map(el => el.value);
     const quantities = {};
+    const addressId = document.getElementById('addressSelect').value;
 
     selectedIds.forEach(id => {
         quantities[id] = document.getElementById(`quantity_${id}`).value;
@@ -104,7 +105,8 @@ function placeOrder(cartId) {
         },
         body: JSON.stringify({
             product_ids: selectedIds,
-            quantities: quantities
+            quantities: quantities,
+            address_id: addressId
         })
     })
     .then(res => res.json())
