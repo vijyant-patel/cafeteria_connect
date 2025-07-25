@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+  <div class="max-w-5xl mx-auto p-6">
+    <h2 class="text-3xl font-bold mb-6">🛒 Your Cart</h2>
+
+    {% if cart_items %}
+      <div class="overflow-x-auto rounded-lg shadow">
+        <table class="min-w-full bg-white border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Product</th>
+              <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Quantity</th>
+              <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Shop</th>
+              <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Price</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100">
+            {% for item in cart_items %}
+                <tr class="hover:bg-gray-50">
+                <td class="py-3 px-4 text-sm text-gray-800 font-semibold">{{ item.product.name }}</td>
+                <td class="py-3 px-4">
+                    <input type="number" id="quantity_{{ item.product.id }}" value="{{ item.quantity }}" min="1" class="w-16 border px-2 py-1 rounded">
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-700">{{ item.product.shop.name }}</td>
+                <td class="py-3 px-4 text-sm text-green-600 font-bold">₹{{ item.product.price }}</td>
+                </tr>
+                <!-- Hidden input to collect product_ids -->
+                <input type="hidden" class="product-id" value="{{ item.product.id }}">
+            {% endfor %}
+        </tbody>
+
+        </table>
+      </div>
+
+      <div class="mt-6 flex justify-between">
+        <button onclick="placeOrder('{{ cart_items.0.product.shop.id }}')" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg transition duration-200">✅ Place Order</button>
+        <button onclick="clearCart()" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-lg transition duration-200">🗑️ Clear Cart</button>
+      </div>
+    {% comment %} {% else %}
+      <div class="text-center text-gray-500 text-lg font-medium mt-12">🛍️ Your cart is currently empty.</div> {% endcomment %}
+    {% endif %}
+    <div id="empty-cart-msg" class="text-center text-gray-500 text-lg font-medium mt-12 {% if cart_items %}hidden{% endif %}">
+        🛍️ Your cart is currently empty.
+    </div>
+  </div>
+{% endblock %}
+{% block scripts %}
+  <script src="{% static 'js/cart.js' %}"></script>
+{% endblock %}

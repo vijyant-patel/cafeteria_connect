@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+  <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <h2 class="text-3xl font-bold text-center text-indigo-600 mb-6">📝 Sign Up</h2>
+
+    <form method="post" class="space-y-5">
+      {% csrf_token %}
+
+      <!-- Username -->
+      <div>
+        <label for="{{ form.username.id_for_label }}" class="block text-gray-700 font-medium mb-1">
+          {{ form.username.label }}
+        </label>
+        {{ form.username }}
+        {% for error in form.username.errors %}
+          <p class="text-sm text-red-500 mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- Password 1 -->
+      <div>
+        <label for="{{ form.password1.id_for_label }}" class="block text-gray-700 font-medium mb-1">
+          {{ form.password1.label }}
+        </label>
+        {{ form.password1 }}
+        {% for error in form.password1.errors %}
+          <p class="text-sm text-red-500 mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- Password 2 -->
+      <div>
+        <label for="{{ form.password2.id_for_label }}" class="block text-gray-700 font-medium mb-1">
+          {{ form.password2.label }}
+        </label>
+        {{ form.password2 }}
+        {% for error in form.password2.errors %}
+          <p class="text-sm text-red-500 mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- is_shopkeeper Checkbox -->
+      <div class="flex items-center gap-2">
+        {{ form.is_shopkeeper }}
+        <label for="{{ form.is_shopkeeper.id_for_label }}" class="text-gray-700">
+          {{ form.is_shopkeeper.label }}
+        </label>
+        {% for error in form.is_shopkeeper.errors %}
+          <p class="text-sm text-red-500 mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+      <!-- Role Select Field -->
+      <div>
+        <label for="{{ form.role.id_for_label }}" class="block text-gray-700 font-medium mb-1">
+          {{ form.role.label }}
+        </label>
+        {{ form.role }}
+        {% for error in form.role.errors %}
+          <p class="text-sm text-red-500 mt-1">{{ error }}</p>
+        {% endfor %}
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-xl hover:bg-indigo-700 transition">
+        ✅ Register
+      </button>
+    </form>
+
+    <div class="text-center mt-4">
+      <a href="{% url 'login' %}" class="text-indigo-500 hover:underline text-sm">
+        Already have an account? Login
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

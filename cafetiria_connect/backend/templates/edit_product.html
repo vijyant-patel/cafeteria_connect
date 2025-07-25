@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="max-w-xl mx-auto mt-16 p-8 bg-white rounded-2xl shadow-lg">
+    <h2 class="text-3xl font-bold mb-6 text-center text-gray-800">Edit Product: "{{ product.name }}"</h2>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Product Name</label>
+        {{ form.name }}
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Price</label>
+        {{ form.price }}
+      </div>
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Stock</label>
+        {{ form.stock }}
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Description</label>
+        {{ form.description }}
+      </div>
+
+      <div class="flex products-center gap-2">
+        {{ form.is_available }}
+        <label for="{{ form.is_available.id_for_label }}" class="text-gray-700">Available</label>
+      </div>
+
+      <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-xl hover:bg-indigo-700 transition">
+        Update Product
+      </button>
+    </form>
+
+    <div class="text-center mt-4">
+      <a href="{% url 'product-list' product.shop.id %}" class="text-sm text-indigo-500 hover:underline">← Back to Products</a>
+    </div>
+  </div>
+{% endblock %}
