@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto py-8">
+  <h1 class="text-2xl font-bold mb-4">Your Addresses</h1>
+  <a href="{% url 'add_address' %}" class="inline-block mb-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Address</a>
+
+  <hr class="my-6" />
+
+  <h2 class="text-xl font-semibold mb-2">Saved Addresses</h2>
+  {% for addr in addresses %}
+    <div class="relative border p-4 rounded mb-2 hover:shadow {{ addr.is_default|yesno:'bg-green-50,bg-white' }}">
+      
+      <!-- Delete Cross Icon -->
+      <form action="{% url 'delete_address' addr.id %}" method="post" class="absolute top-2 right-3">
+        {% csrf_token %}
+        <button type="submit" class="text-red-600 text-sm hover:underline" onclick="return confirm('Are you sure you want to delete this address?');">
+          ❌
+        </button>
+      </form>
+
+      <!-- Clickable Area for Editing -->
+      <a href="{% url 'edit_address' addr.id %}" class="block">
+        <p><strong>{{ addr.name }}</strong> - {{ addr.line1 }}, {{ addr.city }}, {{ addr.state }} - {{ addr.pincode }}</p>
+        <p>📞 {{ addr.phone }}</p>
+        {% if addr.is_default %}
+          <span class="text-green-600 font-medium">Default Address</span>
+        {% endif %}
+      </a>
+    </div>
+  {% empty %}
+    <p>No addresses added.</p>
+  {% endfor %}
+</div>
+{% endblock %}

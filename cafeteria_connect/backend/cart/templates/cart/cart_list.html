@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="max-w-4xl mx-auto mt-10">
+  <h2 class="text-3xl font-bold mb-6">🧺 Your Carts by Shop</h2>
+
+  {% if carts %}
+    <div class="grid grid-cols-1 gap-6">
+      {% for cart in carts %}
+        <div class="border border-gray-200 rounded-lg p-5 shadow-sm">
+          <h3 class="text-xl font-semibold mb-3 text-blue-700">{{ cart.shop.name }}</h3>
+          <ul class="mb-4">
+            {% for item in cart.items.all %}
+              <li class="text-sm text-gray-700">{{ item.product.name }} × {{ item.quantity }}</li>
+            {% endfor %}
+          </ul>
+          <a href="{% url 'view_cart' cart.id %}" class="text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">View Cart</a>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="text-gray-500 text-lg text-center">🛒 You don't have any active carts.</p>
+  {% endif %}
+</div>
+{% endblock %}

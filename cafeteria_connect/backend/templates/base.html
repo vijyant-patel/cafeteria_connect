@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cafeteria Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% comment %} <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css" rel="stylesheet"> {% endcomment %}
+
+</head>
+<body class="bg-gray-100 min-h-screen font-sans">
+  
+  <!-- Navbar -->
+  <nav class="bg-white shadow py-4 px-6 flex justify-between products-center">
+    <!-- Logo Centered (Visually) -->
+     {% if user.is_authenticated %}
+        <a href="{% url 'my_orders' %}" class="text-sm text-blue-600 hover:underline">My Orders</a>
+        <a href="{% url 'cart_list' %}" class="cart-link">
+            🛒 Cart (<span id="cart-count">{{ cart_item_count }}</span>)
+        </a>
+      {% endif %}
+
+    <div class="flex-1 text-center">
+      <a href="{% url 'shop-list' %}" class="text-2xl font-bold text-gray-800 hover:text-blue-600 transition">
+        Cafeteria Connect 🏬
+      </a>
+    </div>
+
+    {% if user.is_authenticated %}
+        <!-- Container for Profile & Logout -->
+        <div class="absolute top-4 right-6 flex items-center space-x-4">
+
+          <!-- Profile Button -->
+          <a href="{% url 'profile' %}" class="text-gray-700 hover:text-black flex items-center space-x-1">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M5.121 17.804A7 7 0 0112 15a7 7 0 016.879 2.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span>Profile</span>
+          </a>
+
+          <!-- Logout Link -->
+          <a href="{% url 'logout' %}" class="text-sm text-red-600 hover:underline">
+            Logout
+          </a>
+
+        </div>
+    {% endif %}
+  </nav>
+
+  {% block content %}{% endblock %}
+  {% block scripts %}{% endblock %}
+</body>
+</html>
