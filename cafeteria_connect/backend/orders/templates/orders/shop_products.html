@@ -13,6 +13,11 @@
                     <label for="product_{{ product.id }}" class="text-gray-700 font-medium">
                         {{ product.name }}
                         <span class="text-sm text-gray-500">- ₹{{ product.price }}</span>
+                        {% if product.stock > 0 and product.stock <= 5 %}
+                            <span class="text-red-500 text-sm font-semibold ml-2">
+                                Hurry up! Only {{ product.stock }} left in stock.
+                            </span>
+                        {% endif %}
                     </label>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -22,17 +27,23 @@
                         id="quantity_{{ product.id }}"
                         value="1"
                         min="1"
-                        max="10"
+                        max="{{ product.stock }}"
                         class="w-20 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                        {% if product.stock == 0 %}disabled{% endif %}
                     >
-                    <button
-                        type="button"
-                        onclick="addToCart({{ product.id }}, parseInt(document.getElementById('quantity_{{ product.id }}').value))"
-                        class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
-                    >
-                        ➕ Add to Cart
-                    </button>
+                    {% if product.stock > 0 %}
+                        <button
+                            type="button"
+                            onclick="addToCart({{ product.id }}, parseInt(document.getElementById('quantity_{{ product.id }}').value))"
+                            class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700"
+                        >
+                            ➕ Add to Cart
+                        </button>
+                    {% else %}
+                        <span class="text-red-600 font-semibold">Out of Stock</span>
+                    {% endif %}
                 </div>
+
             </div>
         {% endfor %}
 

@@ -1,22 +1,42 @@
 function getCSRFToken() {
-    // return document.querySelector('[name=csrfmiddlewaretoken]').value;
-    var csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
     if (csrfInput) {
         return csrfInput.value;
     }
-    if (!csrfInput){
-      const name = 'csrftoken';
-      const cookies = document.cookie.split(';');
-      for (let cookie of cookies) {
-          csrfInput = cookie.trim();
-          if (csrfInput.startsWith(name + '=')) {
-              csrfInput.substring(name.length + 1);
-          }
-      }
-      return '';
+
+    // Fallback to cookie
+    const name = 'csrftoken';
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+        cookie = cookie.trim();
+        if (cookie.startsWith(name + '=')) {
+            return decodeURIComponent(cookie.substring(name.length + 1));
+        }
     }
-    return csrfInput;
+
+    return '';
 }
+
+
+// function getCSRFToken() {
+//     // return document.querySelector('[name=csrfmiddlewaretoken]').value;
+//     var csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+//     if (csrfInput) {
+//         return csrfInput.value;
+//     }
+//     if (!csrfInput){
+//       const name = 'csrftoken';
+//       const cookies = document.cookie.split(';');
+//       for (let cookie of cookies) {
+//           csrfInput = cookie.trim();
+//           if (csrfInput.startsWith(name + '=')) {
+//               csrfInput.substring(name.length + 1);
+//           }
+//       }
+//       return '';
+//     }
+//     return csrfInput;
+// }
 
 function addToCart(productId, quantity = 1) {
     fetch('/cart/add/', {
@@ -40,8 +60,8 @@ function addToCart(productId, quantity = 1) {
 }
 
 
-function clearCart(callback) {
-    fetch('/cart/clear/', {
+function clearCart(cartId, callback) {
+    fetch(`/cart/clear/${cartId}/`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -53,19 +73,12 @@ function clearCart(callback) {
         alert(data.message);
         document.getElementById('cart-count').textContent = data.cart_count;
 
-        // ✅ Remove the entire table and action buttons from DOM
         const table = document.querySelector('table');
         if (table) table.remove();
 
         const actions = document.querySelector('.mt-6');
         if (actions) actions.remove();
 
-        // ✅ Show "Your cart is empty" message
-        // const cartContainer = document.querySelector('.max-w-5xl');
-        // const emptyMsg = document.createElement('div');
-        // emptyMsg.className = 'text-center text-gray-500 text-lg font-medium mt-12';
-        // emptyMsg.textContent = '🛍️ Your cart is currently empty.';
-        // cartContainer.appendChild(emptyMsg);
         document.getElementById("empty-cart-msg").classList.remove("hidden");
         if (callback) callback();
     });
@@ -124,4 +137,22 @@ function updateCartCount() {
         .then(data => {
             document.getElementById("cart-count").textContent = data.count;
         });
+}
+
+
+console.log("CSRF Token:", getCSRFToken());
+
+function removeFromCart(productId) {
+    fetch(`/cart/remove/${productId}/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+        location.reload();  // Refresh to reflect changes
+    });
 }

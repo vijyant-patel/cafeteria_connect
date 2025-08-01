@@ -24,7 +24,7 @@ SECRET_KEY = 'django-insecure-(rn8%p1e#)^b3t!cu_(n^-tus!8bjgmg$*smn+j4^i^pm*evv^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.5.44', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.5.44', 'localhost', '127.0.0.1', '*']
 
 
 # Application definition
@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'channels',
     'notifications',
     'cart',
+    'corsheaders',
+
 ]
 
 MIDDLEWARE = [
@@ -54,8 +56,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
-
+CORS_ALLOW_ALL_ORIGINS = True
 ASGI_APPLICATION = 'config.asgi.application'
 
 CHANNEL_LAYERS = {
@@ -76,8 +79,8 @@ REST_FRAMEWORK = {
 # Kafka for producer/consumer
 KAFKA_BOOTSTRAP_SERVERS = ['192.168.80.5:9092']
 
-CELERY_BROKER_URL = 'redis://192.168.80.4:6379/0'
-CELERY_RESULT_BACKEND = 'redis://192.168.80.4:6379/0'
+CELERY_BROKER_URL = 'redis://192.168.80.3:6379/0'
+CELERY_RESULT_BACKEND = 'redis://192.168.80.3:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 

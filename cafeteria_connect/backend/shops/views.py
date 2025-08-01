@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from .forms import ShopForm, ProductForm
 from django.shortcuts import get_object_or_404
 
+
 @login_required
 def shop_list(request):
     user = request.user
@@ -88,3 +89,4 @@ def edit_product(request, product_id):
         'edit': True,
         'product': product
     })
+

@@ -3,6 +3,7 @@ import json
 from orders.models import Order, OrderItem
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET, require_POST
 from shops.models import Product
 from .models import CartItem, Cart
 from core.models import Address
@@ -38,36 +39,58 @@ def add_to_cart(request):
     # 🟢 Get or create a cart for this user and this product's shop
     cart, _ = Cart.objects.get_or_create(user=user, shop=product.shop, is_ordered=False)
 
-    # ✅ Add or update cart item
+    # ✅ Check if item already exists
     cart_item, created = CartItem.objects.get_or_create(
         cart=cart,
         product=product,
         defaults={"quantity": quantity}
     )
+
     if not created:
-        cart_item.quantity += quantity
+        total_quantity = cart_item.quantity + quantity
+        if total_quantity > product.stock:
+            return JsonResponse({
+                "status": "error",
+                "message": f"Only {product.stock - cart_item.quantity} more available in stock.",
+            })
+        cart_item.quantity = total_quantity
         cart_item.save()
+    else:
+        if quantity > product.stock:
+            cart_item.delete()  # remove the just-created item if it exceeds stock
+            return JsonResponse({
+                "status": "error",
+                "message": f"Only {product.stock} available in stock.",
+            })
 
     return JsonResponse({
         "status": "success",
         "message": f"Added to cart for {product.shop.name}!",
-        "cart_count": cart.items.count()  # Total items in that shop's cart
+        "cart_count": cart.items.count()  # Total unique items in cart
     })
+
 
 
 @csrf_exempt
 @login_required
-def clear_cart(request):
-    cart = Cart.objects.filter(user=request.user, is_ordered=False).first()
-    if cart:
-        cart.items.all().delete()
-        cart.delete()  # ✅ delete the empty cart too
+def clear_cart(request, cart_id):
+    try:
+        cart = Cart.objects.get(id=cart_id, user=request.user, is_ordered=False)
+    except Cart.DoesNotExist:
+        return JsonResponse({
+            "status": "error",
+            "message": "Cart not found."
+        })
+
+    cart.items.all().delete()
+    cart.delete()
 
     return JsonResponse({
         "status": "success",
         "message": "Cart cleared.",
         "cart_count": cart_item_count(request)['cart_item_count']
     })
+
 
 
 @login_required
@@ -111,3 +134,18 @@ def view_cart_by_id(request, cart_id):
         "cart_items": cart_items,
         "cart": cart,
     })
+
+
+
+@require_POST
+@login_required
+def remove_from_cart(request, product_id):
+    cart = Cart.objects.filter(user=request.user, is_ordered=False).first()
+    if not cart:
+        return JsonResponse({'status': 'error', 'message': 'Cart not found'}, status=404)
+
+    item = CartItem.objects.filter(cart=cart, product_id=product_id).first()
+    if item:
+        item.delete()
+        return JsonResponse({'status': 'success', 'message': 'Item removed from cart'})
+    return JsonResponse({'status': 'error', 'message': 'Item not found in cart'}, status=404)

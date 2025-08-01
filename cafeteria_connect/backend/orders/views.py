@@ -107,7 +107,7 @@ def place_order(request, cart_id):
 @login_required
 def order_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, customer=request.user)
-    return render(request, 'orders/order_success.html', {'order': order})
+    return render(request, 'orders/order_success.html', {'order': order, 'address': order.address})
 
 
 

@@ -16,17 +16,42 @@
               <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Quantity</th>
               <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Shop</th>
               <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Price</th>
+              <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Stock</th>
+              <th class="py-3 px-4 text-left text-sm font-medium text-gray-600">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-100">
             {% for item in cart_items %}
                 <tr class="hover:bg-gray-50">
-                <td class="py-3 px-4 text-sm text-gray-800 font-semibold">{{ item.product.name }}</td>
-                <td class="py-3 px-4">
-                    <input type="number" id="quantity_{{ item.product.id }}" value="{{ item.quantity }}" min="1" class="w-16 border px-2 py-1 rounded">
+
+                  
+                  <td class="py-3 px-4 text-sm text-gray-800 font-semibold">{{ item.product.name }}</td>
+                  <td class="py-3 px-4">
+                    <input type="number" id="quantity_{{ item.product.id }}"
+                      value="{{ item.quantity }}"
+                      min="1"
+                      max="{{item.product.stock}}"
+                      {% if item.product.stock == 0 %}disabled{% endif %}
+                      class="w-16 border px-2 py-1 rounded">
+                      {% if item.quantity > item.product.stock %}
+                          <p class="text-red-600 text-sm mt-1">
+                              ⚠ Only {{ item.product.stock }} left in stock!
+                          </p>
+                      {% endif %}
+                  </td>
+                  <td class="py-3 px-4 text-sm text-gray-700">{{ item.product.shop.name }}</td>
+                  <td class="py-3 px-4 text-sm text-green-600 font-bold">₹{{ item.product.price }}</td>
+                  {% if item.product.stock == 0 or item.quantity > item.product.stock%}
+                    <td><p class="text-red-600 text-sm mt-1 font-semibold">Out of Stock</p></td>
+                  {% else %}
+                    <td><p class="text-green-600 text-sm mt-1 font-semibold">In Stock</p></td>
+                  {% endif %}
+                  <td class="py-3 px-4">
+                    <button onclick="removeFromCart({{ item.product.id }})"
+                            class="text-red-600 font-semibold hover:underline">
+                        Remove
+                    </button>
                 </td>
-                <td class="py-3 px-4 text-sm text-gray-700">{{ item.product.shop.name }}</td>
-                <td class="py-3 px-4 text-sm text-green-600 font-bold">₹{{ item.product.price }}</td>
                 </tr>
                 <!-- Hidden input to collect product_ids -->
                 <input type="hidden" class="product-id" value="{{ item.product.id }}">
@@ -56,7 +81,11 @@
 
       <div class="mt-6 flex justify-between">
         <button onclick="placeOrder('{{ cart_items.0.cart.id }}')" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-5 rounded-lg transition duration-200">✅ Place Order</button>
-        <button onclick="clearCart()" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-lg transition duration-200">🗑️ Clear Cart</button>
+        <button onclick="clearCart('{{ cart_items.0.cart.id }}')" 
+                class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-5 rounded-lg transition duration-200">
+            🗑️ Clear Cart
+        </button>
+
       </div>
     {% comment %} {% else %}
       <div class="text-center text-gray-500 text-lg font-medium mt-12">🛍️ Your cart is currently empty.</div> {% endcomment %}
