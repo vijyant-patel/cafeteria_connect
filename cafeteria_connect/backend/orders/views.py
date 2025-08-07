@@ -1,4 +1,4 @@
-from .tasks import generate_invoice
+from .tasks import generate_invoice, start_preparing
 from core.kafka.producer import publish_order_placed
 from django.shortcuts import render, get_object_or_404, redirect
 from shops.models import Shop, Product
@@ -104,6 +104,8 @@ def place_order(request, cart_id):
         'cart': cart,
         'products': [item.product for item in products]
     })
+
+
 @login_required
 def order_success(request, order_id):
     order = get_object_or_404(Order, id=order_id, customer=request.user)
@@ -121,6 +123,11 @@ def update_order_status(request, order_id):
         if new_status in dict(Order.STATUS_CHOICES).keys():
             order.status = new_status
             order.save()
+            if new_status == 'preparing':
+                if "requires_manual_preparation" == "requires_manual_preparation":
+                    start_preparing.delay(order.id)
+                else:
+                    start_preparing.delay(order.id)
             # 🔁 (Optional) trigger Kafka/Celery event here
         return HttpResponseRedirect(reverse('my_orders'))  # or redirect to admin/order list
 

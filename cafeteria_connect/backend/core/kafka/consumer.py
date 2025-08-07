@@ -93,7 +93,10 @@ for message in consumer:
         order.save()
         print(f"🟢 Order #{order.id} marked as CONFIRMED")
         send_ws_notification(order, 'confirmed')
-        start_preparing.delay(order.id)  # ⏩ trigger async move to 'preparing'
+        # if "requires_manual_preparation" == "requires_manual_preparation":
+        #     start_preparing.delay(order.id)
+        # else:
+        #     start_preparing.delay(order.id)
     else:
         order.status = 'cancelled'
         order.save()

@@ -4,11 +4,15 @@ from shops.models import Shop, Product
 
 class Order(models.Model):
     STATUS_CHOICES = (
+        ('placed', 'Placed'),
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
         ('preparing', 'Preparing'),
+        ('ready_to_deliver', 'Ready to Deliver'),
+        ('out_for_delivery', 'Out for Delivery'),
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
+        ('failed', 'Failed'),
     )
 
     customer = models.ForeignKey(User, on_delete=models.CASCADE)

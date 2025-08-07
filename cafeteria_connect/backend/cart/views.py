@@ -28,6 +28,9 @@ def add_to_cart(request):
         data = json.loads(request.body)
         product_id = data.get("product_id")
         quantity = int(data.get("quantity", 1))
+        is_update = data.get("is_update", False)
+        if quantity < 1:
+            return JsonResponse({"status": "error", "message": "Invalid quantity. Must be at least 1."})
     except Exception:
         return JsonResponse({"status": "error", "message": "Invalid data format."})
 
@@ -47,13 +50,21 @@ def add_to_cart(request):
     )
 
     if not created:
-        total_quantity = cart_item.quantity + quantity
-        if total_quantity > product.stock:
-            return JsonResponse({
-                "status": "error",
-                "message": f"Only {product.stock - cart_item.quantity} more available in stock.",
-            })
-        cart_item.quantity = total_quantity
+        if is_update:
+            if quantity > product.stock:
+                return JsonResponse({
+                    "status": "error",
+                    "message": f"Only {product.stock} in stock.",
+                })
+            cart_item.quantity = quantity  # ✅ direct update
+        else:
+            total_quantity = cart_item.quantity + quantity
+            if total_quantity > product.stock:
+                return JsonResponse({
+                    "status": "error",
+                    "message": f"Only {product.stock - cart_item.quantity} more available in stock.",
+                })
+            cart_item.quantity = total_quantity
         cart_item.save()
     else:
         if quantity > product.stock:

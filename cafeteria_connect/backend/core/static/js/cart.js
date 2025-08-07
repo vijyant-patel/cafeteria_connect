@@ -38,23 +38,27 @@ function getCSRFToken() {
 //     return csrfInput;
 // }
 
-function addToCart(productId, quantity = 1) {
+function addToCart(productId, quantity = 1, isUpdate = false) {
+    if (quantity < 1) {
+        alert("⚠ Quantity must be at least 1.");
+        return;
+    }
     fetch('/cart/add/', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRFToken': getCSRFToken()
         },
-        body: JSON.stringify({ product_id: productId, quantity: quantity })
+        body: JSON.stringify({ product_id: productId, quantity: quantity, is_update: isUpdate})
     })
     .then(res => res.json())
     .then(data => {
         alert(data.message);
         document.getElementById("cart-count").textContent = data.cart_count;
         if (data.status === 'error') {
-            if (confirm("Clear cart to add from a new shop?")) {
-                clearCart(() => addToCart(productId, quantity));
-            }
+            // if (confirm("Clear cart to add from a new shop?")) {
+            //     clearCart(() => addToCart(productId, quantity));
+            // }
         }
     });
 }

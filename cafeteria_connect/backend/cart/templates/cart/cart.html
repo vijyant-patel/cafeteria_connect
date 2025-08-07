@@ -32,7 +32,9 @@
                       min="1"
                       max="{{item.product.stock}}"
                       {% if item.product.stock == 0 %}disabled{% endif %}
-                      class="w-16 border px-2 py-1 rounded">
+                      class="w-16 border px-2 py-1 rounded"
+                      onchange="addToCart({{ item.product.id }}, parseInt(this.value), true)"
+                      >
                       {% if item.quantity > item.product.stock %}
                           <p class="text-red-600 text-sm mt-1">
                               ⚠ Only {{ item.product.stock }} left in stock!
