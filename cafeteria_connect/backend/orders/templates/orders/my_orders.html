@@ -6,47 +6,47 @@
 
     {% if orders %}
         {% for order in orders %}
-            <div class="border border-gray-200 rounded-lg p-4 mb-4">
-                <div class="flex justify-between items-center mb-2">
-                    <div>
-                        <p class="font-semibold text-gray-700">Order #{{ order.id }}</p>
-                        <p class="text-sm text-gray-500">Shop: {{ order.shop.name }}</p>
+            <a href="{% url 'order_detail' order.id %}" class="block hover:bg-gray-50 rounded-lg transition">
+                <div class="border border-gray-200 rounded-lg p-4 mb-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <div>
+                            <p class="font-semibold text-gray-700">Order #{{ order.id }}</p>
+                            <p class="text-sm text-gray-500">Shop: {{ order.shop.name }}</p>
+                        </div>
+                        <div class="text-right space-y-1">
+                            <span id="order-status-{{ order.id }}" class="px-3 py-1 text-sm rounded-full 
+                                {% if order.status == 'pending' %}
+                                    bg-yellow-100 text-yellow-800
+                                {% elif order.status == 'confirmed' %}
+                                    bg-green-100 text-green-800
+                                {% elif order.status == 'cancelled' %}
+                                    bg-red-100 text-red-800
+                                {% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="text-right space-y-1">
-                        <span class="px-3 py-1 text-sm rounded-full 
-                            {% if order.status == 'pending' %}
-                                bg-yellow-100 text-yellow-800
-                            {% elif order.status == 'confirmed' %}
-                                bg-green-100 text-green-800
-                            {% elif order.status == 'cancelled' %}
-                                bg-red-100 text-red-800
-                            {% endif %}">
-                            {{ order.get_status_display }}
-                        </span>
-                        {% if user.is_shopkeeper %}
-                            <div>
-                                <a href="{% url 'update_order_status' order.id %}" class="text-xs text-blue-600 hover:underline" style="test-decoration:None">
-                                    Edit Status
-                                </a>
-                            </div>
-                        {% endif %}
-                    </div>
+
+                    <ul class="ml-4 list-disc text-gray-700">
+                        {% for item in order.items.all %}
+                            <li>{{ item.quantity }} × {{ item.product.name }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <p class="text-right font-semibold text-gray-800 mt-2">Total: ₹{{ order.total_price }}</p>
                 </div>
-
-                <ul class="ml-4 list-disc text-gray-700">
-                    {% for item in order.items.all %}
-                        <li>{{ item.quantity }} × {{ item.product.name }}</li>
-                    {% endfor %}
-                </ul>
-
-                <p class="text-right font-semibold text-gray-800 mt-2">Total: ₹{{ order.total_price }}</p>
-            </div>
+            </a>
         {% endfor %}
+
     {% else %}
         <p class="text-center text-gray-500">No orders yet.</p>
     {% endif %}
 </div>
 {% endblock %}
 {% block scripts %}
+    <script>
+        window.VISIBLE_ORDER_IDS = [{% for order in orders %}{{ order.id }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+    </script>
+
   <script src="{% static 'js/notifications.js' %}"></script>
 {% endblock %}

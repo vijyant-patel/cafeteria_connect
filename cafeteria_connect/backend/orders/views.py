@@ -1,5 +1,5 @@
 from .tasks import generate_invoice, start_preparing
-from core.kafka.producer import publish_order_placed
+from core.kafka.producer import publish_order_placed, publish_order_status_update
 from django.shortcuts import render, get_object_or_404, redirect
 from shops.models import Shop, Product
 from cart.models import Cart
@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.http import Http404, HttpResponse, HttpResponseRedirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
@@ -21,10 +22,10 @@ def my_orders(request):
         # Get orders for shops owned by this shopkeeper
         shops = Shop.objects.filter(owner=user)
         orders = Order.objects.filter(shop__in=shops).order_by('-created_at') \
-                    .prefetch_related('items', 'items__product', 'shop', 'customer')
+                    .prefetch_related('items', 'items__product', 'shop', 'user')
     else:
-        # Regular customer orders
-        orders = Order.objects.filter(customer=user).order_by('-created_at') \
+        # Regular user orders
+        orders = Order.objects.filter(user=user).order_by('-created_at') \
                     .prefetch_related('items', 'items__product', 'shop')
 
     return render(request, 'orders/my_orders.html', {'orders': orders, 'is_shopkeeper': is_shopkeeper})
@@ -58,7 +59,7 @@ def place_order(request, cart_id):
         total = 0
         shop = products[0].product.shop if products else None
         order = Order.objects.create(
-            customer=request.user,
+            user=request.user,
             shop=shop,
             status='pending',
             address=selected_address  # 👈 attach the address
@@ -80,7 +81,7 @@ def place_order(request, cart_id):
 
         order_data = {
             'order_id': order.id,
-            'customer_id': request.user.id,
+            'user_id': request.user.id,
             'shop_id': shop.id if shop else None,
             'total_price': float(order.total_price),
             'status': order.status,
@@ -108,27 +109,111 @@ def place_order(request, cart_id):
 
 @login_required
 def order_success(request, order_id):
-    order = get_object_or_404(Order, id=order_id, customer=request.user)
+    order = get_object_or_404(Order, id=order_id, user=request.user)
     return render(request, 'orders/order_success.html', {'order': order, 'address': order.address})
 
 
-
+from django.http import JsonResponse
 
 @login_required
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
 
     if request.method == 'POST':
-        new_status = request.POST.get('status')
+        data = json.loads(request.body)
+        new_status = data.get('status')
         if new_status in dict(Order.STATUS_CHOICES).keys():
-            order.status = new_status
-            order.save()
-            if new_status == 'preparing':
-                if "requires_manual_preparation" == "requires_manual_preparation":
-                    start_preparing.delay(order.id)
-                else:
-                    start_preparing.delay(order.id)
-            # 🔁 (Optional) trigger Kafka/Celery event here
-        return HttpResponseRedirect(reverse('my_orders'))  # or redirect to admin/order list
+            allowed_transitions = Order.VALID_STATUS_TRANSITIONS.get(order.status, [])
+            if new_status in allowed_transitions or True:
+                # order.status = new_status
+                # order.save()
+                order_data = {
+                    'order_id': order.id,
+                    'new_status': new_status,
+                    'timestamp': str(order.updated_at)  # Or use datetime.now()
+                }
+                publish_order_status_update(order_data)
 
-    return render(request, 'orders/update_status.html', {'order': order, 'status_choices': Order.STATUS_CHOICES})
+                # Example async task
+                if new_status == 'preparing':
+                    start_preparing.delay(order.id)
+
+                return JsonResponse({
+                    "success": True,
+                    "new_status": order.status,
+                    "message": "Status updated successfully"
+                })
+
+            return JsonResponse({"success": False, "message": "Invalid status transition"}, status=400)
+
+        return JsonResponse({"success": False, "message": "Invalid status"}, status=400)
+
+    return JsonResponse({"success": False, "message": "Invalid request method"}, status=405)
+
+
+# @login_required
+# def update_order_status(request, order_id):
+#     order = get_object_or_404(Order, id=order_id)
+
+#     if request.method == 'POST':
+#         new_status = request.POST.get('status')
+
+#         # ✅ Valid status choice check
+#         if new_status in dict(Order.STATUS_CHOICES).keys():
+#             # ✅ Transition allowed check
+#             allowed_transitions = Order.VALID_STATUS_TRANSITIONS.get(order.status, [])
+#             if new_status in allowed_transitions:
+#                 order.status = new_status
+#                 order.save()
+
+#                 # 📦 Example: Preparing case me async task
+#                 if new_status == 'preparing':
+#                     if "requires_manual_preparation" == "requires_manual_preparation":
+#                         start_preparing.delay(order.id)
+#                     else:
+#                         start_preparing.delay(order.id)
+
+#                 # 🔁 Kafka / Redis / WebSocket trigger yaha laga sakte ho
+
+#                 return HttpResponseRedirect(reverse('my_orders'))
+#             else:
+#                 return HttpResponse("Invalid status transition", status=400)
+
+#     return render(request, 'orders/update_status.html', {
+#         'order': order,
+#         'status_choices': Order.STATUS_CHOICES
+#     })
+
+
+# @login_required
+# def update_order_status(request, order_id):
+#     order = get_object_or_404(Order, id=order_id)
+
+#     if request.method == 'POST':
+#         new_status = request.POST.get('status')
+#         if new_status in dict(Order.STATUS_CHOICES).keys():
+#             order.status = new_status
+#             order.save()
+#             if new_status == 'preparing':
+#                 if "requires_manual_preparation" == "requires_manual_preparation":
+#                     start_preparing.delay(order.id)
+#                 else:
+#                     start_preparing.delay(order.id)
+#             # 🔁 (Optional) trigger Kafka/Celery event here
+#         return HttpResponseRedirect(reverse('my_orders'))  # or redirect to admin/order list
+
+#     return render(request, 'orders/update_status.html', {'order': order, 'status_choices': Order.STATUS_CHOICES})
+
+@login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id)
+    status_list = [choice[0] for choice in order.STATUS_CHOICES]
+    current_index = status_list.index(order.status)
+
+    return render(request, "orders/order_detail.html", {
+        "order": order,
+        "current_index": current_index,
+        "status_choices": order.STATUS_CHOICES if request.user.is_shopkeeper else None,
+        "is_shopkeeper": request.user.is_shopkeeper
+    })
+

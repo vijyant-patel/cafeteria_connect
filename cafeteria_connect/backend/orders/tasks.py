@@ -24,7 +24,7 @@ def generate_invoice(order_id):
         order = Order.objects.get(id=order_id)
 
         # 🧾 Fake invoice generation logic for now
-        print(f"📄 Generating invoice for Order #{order.id} (Customer: {order.customer.username})")
+        print(f"📄 Generating invoice for Order #{order.id} (Customer: {order.user.username})")
 
         # Future: generate PDF, save to media/invoices/, etc.
         return f"✅ Invoice generated for Order #{order.id}"

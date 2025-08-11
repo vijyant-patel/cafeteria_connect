@@ -160,3 +160,37 @@ function removeFromCart(productId) {
         location.reload();  // Refresh to reflect changes
     });
 }
+
+
+
+function updateStatus(newStatus, clickedIndex, currentIndex, orderId) {
+    // if (clickedIndex <= currentIndex) {
+    //     alert("You cannot go back to a previous status.");
+    //     return;
+    // }
+
+    fetch(`/orders/${orderId}/update/`, {
+        method: "POST",
+        headers: {
+            "X-CSRFToken": getCSRFToken(),
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json(); // ✅ JSON response le raha hai
+        } else {
+            return response.json().then(data => {
+                throw new Error(data.message || "Failed to update status");
+            });
+        }
+    })
+    .then(data => {
+        alert(data.message || "Status updated successfully");
+        location.reload();
+    })
+    .catch(err => {
+        alert(err.message);
+    });
+}

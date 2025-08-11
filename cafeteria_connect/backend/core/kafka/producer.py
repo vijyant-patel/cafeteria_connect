@@ -15,3 +15,10 @@ producer = KafkaProducer(
 def publish_order_placed(order_data):
     producer.send(KAFKA_TOPIC, order_data)
     producer.flush()
+
+
+STATUS_UPDATE_TOPIC = 'orders.status_updated'
+
+def publish_order_status_update(order_data):
+    producer.send(STATUS_UPDATE_TOPIC, order_data)
+    producer.flush()
