@@ -82,6 +82,9 @@
     <script src="{% static 'js/cart.js' %}"></script>
     <script>
         window.CURRENT_ORDER_ID = {{ order.id }};
+        window.VISIBLE_ORDER_IDS = []; // No list page here
+        window.CURRENT_USER_ID = {{ request.user.id }};
+
     </script>
     <script src="{% static 'js/notifications.js' %}"></script>
 {% endblock %}

@@ -22,13 +22,41 @@ print("🔄 Listening to Redis channel 'order_updates'...")
 for message in pubsub.listen():
     if message['type'] == 'message':
         data = json.loads(message['data'])
+        order_id = data.get('order_id')
         print(f"📥 Received message from Redis: {data}")
+        # if order_id:
+        #     group_name = f'order_updates_{order_id}'
+        #     async_to_sync(channel_layer.group_send)(
+        #         group_name,
+        #         {
+        #             'type': 'send_notification',   # Must match async method name in consumer
+        #             'message': data
+        #         }
+        #     )
+        #     print("📤 Sent message to Channels group 'order_updates'")
+        
+        if order_id:
+            group_name_order = f'order_updates_{order_id}'
+            group_name_user = f'user_{data.get("user_id")}'  # Add user_id in Redis message
 
-        async_to_sync(channel_layer.group_send)(
-            'order_updates',
-            {
-                'type': 'send_notification',   # Must match async method name in consumer
-                'message': data
-            }
-        )
-        print("📤 Sent message to Channels group 'order_updates'")
+            # Send to order-specific group
+            async_to_sync(channel_layer.group_send)(
+                group_name_order,
+                {
+                    'type': 'send_notification',
+                    'message': data
+                }
+            )
+            print(f"📤 Sent message to Channels group '{group_name_order}'")
+
+            # Send to user-specific group
+            if data.get("user_id"):
+                async_to_sync(channel_layer.group_send)(
+                    group_name_user,
+                    {
+                        'type': 'send_notification',
+                        'message': data
+                    }
+                )
+                print(f"📤 Sent message to Channels group '{group_name_user}'")
+

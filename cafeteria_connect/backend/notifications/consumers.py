@@ -12,7 +12,16 @@ import asyncio
 
 class NotificationConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.group_name = "order_updates"
+        # self.group_name = 'order_updates'
+        # self.order_id = self.scope['url_route']['kwargs']['order_id']
+        # self.group_name = f'order_updates_{self.order_id}'
+        if 'order_id' in self.scope['url_route']['kwargs']:
+            order_id = self.scope['url_route']['kwargs']['order_id']
+            self.group_name = f'order_updates_{order_id}'
+
+        elif 'user_id' in self.scope['url_route']['kwargs']:
+            user_id = self.scope['url_route']['kwargs']['user_id']
+            self.group_name = f'user_{user_id}'
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
         print(f"WebSocket connected: {self.channel_name}")

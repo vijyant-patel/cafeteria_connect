@@ -64,7 +64,8 @@ for message in consumer:
     redis_message = {
         'order_id': order_id,
         'new_status': new_status,
-        'timestamp': str(datetime.now())
+        'timestamp': str(datetime.now()),
+        'user_id': order.user.id if order.user else None
     }
 
     redis_client.publish(REDIS_CHANNEL, json.dumps(redis_message))

@@ -1,17 +1,26 @@
 // Setup WebSocket URL based on protocol (ws/wss) and hostname
 const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
 // Replace localhost IP with your actual server host if deploying
-const socketUrl = `${protocol}://127.0.0.1:8002/ws/notifications/`;
+
+// if (typeof CURRENT_ORDER_ID !== 'undefined' && CURRENT_ORDER_ID) {
+//     // Detail page → order-specific group
+//     socketUrl = `${protocol}://127.0.0.1:8002/ws/notifications/order/${CURRENT_ORDER_ID}/`;
+// } else if (typeof CURRENT_USER_ID !== 'undefined' && CURRENT_USER_ID) {
+//     // List page → user-specific group
+// }
+socketUrl = `${protocol}://127.0.0.1:8002/ws/notifications/user/${CURRENT_USER_ID}/`;
+// const socketUrl = `${protocol}://127.0.0.1:8002/ws/notifications/order/${CURRENT_ORDER_ID}/`;
+// const socketUrl = `${protocol}://127.0.0.1:8002/ws/notifications/user/${CURRENT_USER_ID}/`;
 
 console.log('Connecting to WebSocket:', socketUrl);
 
 const socket = new WebSocket(socketUrl);
 
-// Define current order ID for detail page (set dynamically in your template)
-const CURRENT_ORDER_ID = window.CURRENT_ORDER_ID || null;  // e.g. set via <script> tag in template
 
 // Define visible order IDs on list page (set dynamically in template)
 const VISIBLE_ORDER_IDS = window.VISIBLE_ORDER_IDS || []; // e.g. array of order IDs
+console.log('VISIBLE_ORDER_IDS');
+console.log('CURRENT_ORDER_ID');
 console.log(VISIBLE_ORDER_IDS);
 console.log(CURRENT_ORDER_ID);
 // Map for user-friendly status text
@@ -122,11 +131,22 @@ socket.onmessage = function(event) {
     // Expected data format: { order_id: 123, new_status: "confirmed" }
 
     if (CURRENT_ORDER_ID && data.order_id === CURRENT_ORDER_ID) {
+        console.log('updateOrderDetailStatus');
         updateOrderDetailStatus(data.new_status);
         updateOrderProgressBar(data.new_status, data.current_index);
     }
+    console.log('data.new_status');
+    console.log(data.new_status);
 
     if (VISIBLE_ORDER_IDS.length > 0 && VISIBLE_ORDER_IDS.includes(data.order_id)) {
+        console.log('updateOrderListStatus');
         updateOrderListStatus(data.order_id, data.new_status);
     }
 };
+
+window.addEventListener("pageshow", function (event) {
+    // Agar page cache se load ho raha hai ya hamesha reload chahiye
+    if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+        window.location.reload();
+    }
+});

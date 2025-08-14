@@ -45,7 +45,9 @@
 {% endblock %}
 {% block scripts %}
     <script>
+        window.CURRENT_ORDER_ID = null;
         window.VISIBLE_ORDER_IDS = [{% for order in orders %}{{ order.id }}{% if not forloop.last %}, {% endif %}{% endfor %}];
+        window.CURRENT_USER_ID = {{ request.user.id }};
     </script>
 
   <script src="{% static 'js/notifications.js' %}"></script>
