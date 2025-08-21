@@ -60,7 +60,7 @@ def shop_products(request, shop_id):
 def add_product(request, shop_id):
     shop = get_object_or_404(Shop, id=shop_id)
     if request.method == 'POST':
-        form = ProductForm(request.POST)
+        form = ProductForm(request.POST, request.FILES)
         if form.is_valid():
             product = form.save(commit=False)
             product.shop = shop
@@ -75,7 +75,8 @@ def edit_product(request, product_id):
     product = get_object_or_404(Product, id=product_id)
 
     if request.method == 'POST':  # ✅ Make sure it's method
-        form = ProductForm(request.POST, instance=product)
+        print("request.FILES", request.FILES)
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             product = form.save(commit=False)
             product.shop = product.shop  # manually reassign same value
@@ -89,4 +90,12 @@ def edit_product(request, product_id):
         'edit': True,
         'product': product
     })
+
+
+
+def delete_product(request, product_id):
+    product = get_object_or_404(Product, pk=product_id)
+    shop_id = product.shop.id
+    product.delete()
+    return redirect('product-list', shop_id=shop_id)
 

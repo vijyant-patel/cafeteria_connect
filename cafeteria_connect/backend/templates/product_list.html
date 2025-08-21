@@ -7,24 +7,37 @@
       <div class="text-right mb-4">
         <a href="{% url 'edit-shop' shop.id %}" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition shadow">
           Edit Shop
-          <a href="{% url 'add-product' shop.id %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Add Product</a>
+        </a>
+        <a href="{% url 'add-product' shop.id %}" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+          Add Product
         </a>
       </div>
     {% endif %}
     
     {% if products %}
-     <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {% for product in products %}
-          <a href="{% url 'edit-product' product.id %}" class="block bg-white p-5 rounded shadow hover:shadow-lg transition hover:ring-2 hover:ring-indigo-300">
-            <h2 class="text-xl font-semibold text-gray-800">{{ product.name }}</h2>
-            <p class="text-gray-600">💵 ₹{{ product.price }}</p>
-            {% if product.description %}
-              <p class="text-gray-500 mt-1">{{ product.description }}</p>
+          <div class="relative bg-white p-5 rounded shadow hover:shadow-lg transition hover:ring-2 hover:ring-indigo-300">
+            <!-- Delete icon (top-right corner) -->
+            {% if is_owner %}
+              <a href="{% url 'delete-product' product.id %}" 
+                 class="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                 onclick="return confirm('Are you sure you want to delete this product?')">
+                 🗑️
+              </a>
             {% endif %}
-            <p class="mt-2 text-sm {% if product.is_available %}text-green-600{% else %}text-red-600{% endif %}">
-              {% if product.is_available %}In Stock{% else %}Out of Stock{% endif %}
-            </p>
-          </a>
+            
+            <a href="{% url 'edit-product' product.id %}" class="block">
+              <h2 class="text-xl font-semibold text-gray-800">{{ product.name }}</h2>
+              <p class="text-gray-600">💵 ₹{{ product.price }}</p>
+              {% if product.description %}
+                <p class="text-gray-500 mt-1">{{ product.description }}</p>
+              {% endif %}
+              <p class="mt-2 text-sm {% if product.is_available %}text-green-600{% else %}text-red-600{% endif %}">
+                {% if product.is_available %}In Stock{% else %}Out of Stock{% endif %}
+              </p>
+            </a>
+          </div>
         {% endfor %}
       </div>
     {% else %}

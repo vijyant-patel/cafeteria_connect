@@ -7,7 +7,7 @@ import redis
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from notifications.redis_connection import redis_client
-
+import requests
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
@@ -59,4 +59,15 @@ for message in pubsub.listen():
                     }
                 )
                 print(f"📤 Sent message to Channels group '{group_name_user}'")
-
+            url = "http://localhost:5002/notify/push"
+            SECRET_TOKEN = "MY_SUPER_SECRET_KEY"
+            headers = {
+                    "Authorization": f"Bearer {SECRET_TOKEN}",
+                    "Content-Type": "application/json"
+                }
+            payload = {
+                "user_id": 1,
+                "message": {'status':True},
+                "type": "push"  # ya sms / push
+            }
+            requests.post(url, json=payload, headers=headers)
